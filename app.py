@@ -3,46 +3,40 @@ load_dotenv()
 
 import streamlit as st
 
-st.title("サンプルアプリ②: 少し複雑なWebアプリ")
-
-st.write("##### 動作モード1: 文字数カウント")
-st.write("入力フォームにテキストを入力し、「実行」ボタンを押すことで文字数をカウントできます。")
-st.write("##### 動作モード2: BMI値の計算")
-st.write("身長と体重を入力することで、肥満度を表す体型指数のBMI値を算出できます。")
+st.title("サンプルアプリ: 専門家に聞いてみよう！")
+st.write("#### このアプリは、経営の専門家と心理学の専門家の2人の専門家に質問できるサンプルアプリです。")
+st.write("##### 使い方")
+st.write("①どちらの専門家に聞くか選択してください。  \n②入力フォームにテキストを入力して「実行」ボタンを押すと、選択した専門家からの回答が表示されます。")
 
 selected_item = st.radio(
-    "動作モードを選択してください。",
-    ["文字数カウント", "BMI値の計算"]
+    "専門家を選択してください。",
+    ["経営の専門家", "心理学の専門家"]
 )
 
 st.divider()
 
-if selected_item == "文字数カウント":
-    input_message = st.text_input(label="文字数のカウント対象となるテキストを入力してください。")
-    text_count = len(input_message)
-
-else:
-    height = st.text_input(label="身長（cm）を入力してください。")
-    weight = st.text_input(label="体重（kg）を入力してください。")
+input_message = st.text_input(label="専門家に聞きたい内容を入力してください。")
 
 if st.button("実行"):
     st.divider()
 
-    if selected_item == "文字数カウント":
-        if input_message:
-            st.write(f"文字数: **{text_count}**")
+    from langchain_openai import ChatOpenAI
+    from langchain_core.messages import SystemMessage, HumanMessage
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.5)
 
-        else:
-            st.error("カウント対象となるテキストを入力してから「実行」ボタンを押してください。")
+    if selected_item == "経営の専門家":
+        system_message = SystemMessage(content="あなたは経営の専門家です。")
+        human_message = HumanMessage(content=input_message)
+        response = llm([system_message, human_message]) 
+        st.write("### 経営の専門家からの回答")
+        st.write(response.content)
 
+    elif selected_item == "心理学の専門家":
+        system_message = SystemMessage(content="あなたは心理学の専門家です。")      
+        human_message = HumanMessage(content=input_message)
+        response = llm([system_message, human_message])
+        st.write("### 心理学の専門家からの回答")
+        st.write(response.content)
+        
     else:
-        if height and weight:
-            try:
-                bmi = round(int(weight) / ((int(height)/100) ** 2), 1)
-                st.write(f"BMI値: {bmi}")
-
-            except ValueError as e:
-                st.error("身長と体重は数値で入力してください。")
-
-        else:
-            st.error("身長と体重をどちらも入力してください。")
+        st.error("専門家に聞きたい内容を入力してから「実行」ボタンを押してください。")
